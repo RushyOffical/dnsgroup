@@ -144,7 +144,7 @@ export default function DivisionGrid() {
         title={
           <>
             One parent company.{" "}
-            <span className="text-mist">Specialist divisions beneath it.</span>
+            <span className="text-mist">Cleaning is where it starts.</span>
           </>
         }
         body="Cleaning is where the group starts. Further divisions will be added only once they can be held to the same standard — and will be announced when they are."
