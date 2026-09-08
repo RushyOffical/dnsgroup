@@ -51,7 +51,7 @@ export const group = {
   hero: {
     line1: "One standard.",
     line2: "Every service.",
-    body: "Don & Silva Group is a multi-disciplinary services company. We start with cleaning — and we are building toward a group of specialist divisions that all answer to the same standard of work.",
+    body: "Don & Silva Group is being built as a multi-disciplinary services company, starting with cleaning. More divisions will follow, each answering to the same standard of work.",
   },
 
   /** The group's positioning statement. Used on /about and in metadata. */
@@ -82,16 +82,6 @@ export const group = {
     },
   ],
 
-  /**
-   * TODO: these figures are placeholders — replace with real numbers or
-   * delete the stats band entirely rather than shipping invented metrics.
-   */
-  stats: [
-    { value: "1", label: "Division operating", suffix: "" },
-    { value: "100", label: "Satisfaction guarantee", suffix: "%" },
-    { value: "24", label: "Hour quote turnaround", suffix: "h" },
-    { value: "7", label: "Days a week available", suffix: "" },
-  ],
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -115,45 +105,9 @@ export const divisions: Division[] = [
     discipline: "Commercial & residential cleaning",
     status: "operating",
     summary:
-      "Contract and one-off cleaning for offices, strata, construction handovers and homes. Insured crews, checklist-driven, same standard every visit.",
+      "Contract and one-off cleaning for offices, strata, construction handovers and homes. Scoped in writing, checklist-driven, one standard every visit.",
     accent: "#2fd4c4",
     brand: "cleaning",
-  },
-  {
-    slug: "facilities",
-    href: null,
-    name: "Don & Silva Facilities",
-    shortName: "Facilities",
-    discipline: "Facilities & grounds management",
-    status: "in-development",
-    summary:
-      "Planned division: ongoing building maintenance, grounds keeping and site presentation under one managed contract.",
-    accent: "#5b8def",
-    brand: "group",
-  },
-  {
-    slug: "property",
-    href: null,
-    name: "Don & Silva Property",
-    shortName: "Property",
-    discipline: "Property care & turnover",
-    status: "in-development",
-    summary:
-      "Planned division: end-to-end preparation of properties between tenancies — repairs, presentation and handover.",
-    accent: "#a97bf0",
-    brand: "group",
-  },
-  {
-    slug: "trades",
-    href: null,
-    name: "Don & Silva Trades",
-    shortName: "Trades",
-    discipline: "Maintenance & light trades",
-    status: "in-development",
-    summary:
-      "Planned division: the small repairs that sit between a cleaner and a full contractor, handled by one accountable crew.",
-    accent: "#e08b4c",
-    brand: "group",
   },
 ];
 
@@ -175,7 +129,7 @@ export const cleaning = {
   hero: {
     line1: "Spotless,",
     line2: "on schedule.",
-    body: "Commercial and residential cleaning across Melbourne and Victoria. Fully insured crews, a written checklist for every site, and the same finish on week fifty as on day one.",
+    body: "Commercial and residential cleaning across Melbourne and Victoria. Every site scoped in writing, worked to a checklist, and held to one standard from the first clean.",
   },
 
   promise:
@@ -254,7 +208,7 @@ export const cleaning = {
         "Regular household cleaning with the same crew each visit, so nobody has to re-explain the house.",
       points: [
         "Weekly, fortnightly or monthly",
-        "Consistent, police-checked crew",
+        "Police-checked before their first visit",
         "Products safe around kids and pets",
         "Skip or reschedule any visit free",
       ],
@@ -265,20 +219,20 @@ export const cleaning = {
   /** Why-us column on the cleaning page. */
   assurances: [
     {
-      title: "Fully insured",
-      body: "Public liability cover on every job, with certificates available on request before we start.",
+      title: "Scoped in writing",
+      body: "Every site gets a written scope before we quote, so you know exactly what is and is not included. Nothing is left to interpretation.",
     },
     {
-      title: "Checklist-driven",
-      body: "Each site gets a written scope. Crews sign off against it, so the standard does not drift between visits.",
+      title: "Cover confirmed up front",
+      body: "You will have our certificate of currency in hand before anyone sets foot on your site — not after you have asked twice.",
     },
     {
-      title: "Vetted crews",
-      body: "Police-checked, trained in-house, and briefed on your site before their first shift.",
+      title: "One accountable contact",
+      body: "You deal with the people who own the business, not a call centre and not a subcontractor chain.",
     },
     {
       title: "Backed by the group",
-      body: "Behind the crew is Don & Silva Group — one point of accountability, not a subcontractor chain.",
+      body: "Cleaning is the first Don & Silva Group division, and the standard the rest of the group will be built on.",
     },
   ],
 
@@ -323,15 +277,15 @@ export const cleaning = {
   faqs: [
     {
       q: "Do you bring your own equipment and products?",
-      a: "Yes. Every crew arrives fully equipped. If your site requires specific products or a particular chemical register, we will work to it.",
+      a: "Yes — we arrive fully equipped. If your site needs specific products or a particular chemical register, we will work to it.",
     },
     {
       q: "Are you insured?",
-      a: "Yes — public liability cover applies to every job, and we are happy to provide certificates of currency before work starts.",
+      a: "Public liability cover is in place before we take on a site, and we provide a certificate of currency before any work starts. Ask and it is yours.",
     },
     {
       q: "Can we get the same cleaners each visit?",
-      a: "That is the default for contract work. Consistency is how the standard holds, so we keep the same crew on your site wherever we can.",
+      a: "Yes. Consistency is how the standard holds, so we keep the same people on your site wherever we can.",
     },
     {
       q: "What if something is not done properly?",

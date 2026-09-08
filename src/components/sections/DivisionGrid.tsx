@@ -80,7 +80,7 @@ function Card({
                   : "border-white/8 text-mist/45",
               )}
             >
-              {live ? "Operating" : "In development"}
+              {live ? "Now taking bookings" : "In development"}
             </span>
           )}
         </div>
@@ -147,7 +147,7 @@ export default function DivisionGrid() {
             <span className="text-mist">Specialist divisions beneath it.</span>
           </>
         }
-        body="Don & Silva Cleaning is operating today. The divisions beside it are being built to the same standard, and will open as they are ready."
+        body="Cleaning is where the group starts. Further divisions will be added only once they can be held to the same standard — and will be announced when they are."
       />
 
       {/* Operating companies lead. With one division this is a single wide

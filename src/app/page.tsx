@@ -3,7 +3,6 @@ import Footer from "@/components/ui/Footer";
 import GroupHero from "@/components/sections/GroupHero";
 import DivisionGrid from "@/components/sections/DivisionGrid";
 import GroupStandard from "@/components/sections/GroupStandard";
-import StatsBand from "@/components/sections/StatsBand";
 import CallToAction from "@/components/sections/CallToAction";
 import Reveal from "@/components/ui/Reveal";
 import { ButtonLink, Arrow } from "@/components/ui/Button";
@@ -76,7 +75,6 @@ export default function GroupHome() {
           </div>
         </section>
 
-        <StatsBand />
         <DivisionGrid />
         <GroupStandard />
 

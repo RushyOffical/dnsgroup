@@ -3,8 +3,7 @@
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "motion/react";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { divisions, group } from "@/content/site";
-import { spellCount } from "@/lib/utils";
+import { group } from "@/content/site";
 
 const Stage = dynamic(() => import("@/components/three/Stage"), { ssr: false });
 const Lattice = dynamic(() => import("@/components/three/Lattice"), {
@@ -37,8 +36,8 @@ export default function GroupStandard() {
           eyebrow="Our standard"
           title={
             <>
-              The reason to put {spellCount(divisions.length)} companies{" "}
-              <span className="text-gradient">under one name.</span>
+              The standard every division{" "}
+              <span className="text-gradient">will answer to.</span>
             </>
           }
           body={group.mission}
