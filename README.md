@@ -103,13 +103,35 @@ being switched off:
 
 ## Contact form
 
-`components/sections/QuoteForm.tsx` validates client-side and then composes a
-pre-filled email and hands it to the visitor's mail client. That works on a
-static host with no backend.
+Submissions go through a **Server Action** (`src/app/actions/quote.ts`).
 
-To take submissions server-side, replace `handleSubmit` with a Server Action
-or a POST to an API route — the validation already produces a clean object to
-send.
+- **Validation runs twice.** `src/lib/quote.ts` is dependency-free and shared,
+  so the browser gets instant feedback and the server re-runs the identical
+  checks — the run that actually counts.
+- **Spam protection.** An off-screen honeypot field plus a minimum fill time.
+  Both report success to the sender so a bot learns nothing, and neither is
+  delivered.
+- **Rate limiting.** 5 submissions per IP per 10 minutes, in-memory
+  (`src/lib/rate-limit.ts`). Per-instance and resets on redeploy — enough to
+  blunt a single script, not a substitute for a shared store or a WAF on a
+  multi-instance deploy.
+- **Never a dead end.** With no provider configured the action returns
+  `unconfigured` and the form falls back to opening the visitor's mail client
+  with the enquiry pre-filled. Same if the action is unreachable mid-deploy.
+
+### Configuring delivery
+
+Copy `.env.example` to `.env.local` and set **one** option. The provider is
+inferred from what is present; `QUOTE_PROVIDER` forces one explicitly.
+
+| Provider | Set | Behaviour |
+| --- | --- | --- |
+| `resend` | `RESEND_API_KEY` + `QUOTE_TO_EMAIL` | Emails you, with `reply_to` set to the customer |
+| `webhook` | `QUOTE_WEBHOOK_URL` | POSTs JSON to Zapier / Make / n8n / your endpoint, with an optional `X-Webhook-Secret` |
+| `console` | *(default in dev)* | Logs the enquiry to the server console |
+| `none` | *(default in prod with nothing set)* | Mailto fallback |
+
+Adding another provider is one `case` in `src/lib/delivery.ts`.
 
 ---
 

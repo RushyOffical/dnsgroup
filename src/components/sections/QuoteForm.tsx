@@ -1,97 +1,138 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { motion } from "motion/react";
 import { Button, Arrow } from "@/components/ui/Button";
+import { submitQuote } from "@/app/actions/quote";
+import {
+  formatQuoteBody,
+  formatQuoteSubject,
+  validateQuote,
+  SERVICE_OPTIONS,
+  type QuoteErrors,
+  type QuoteFields,
+} from "@/lib/quote";
 import { cleaning, contact } from "@/content/site";
 import { cn } from "@/lib/utils";
 
-type Fields = {
-  name: string;
-  email: string;
-  phone: string;
-  suburb: string;
-  service: string;
-  message: string;
-};
-
-const EMPTY: Fields = {
+const EMPTY: QuoteFields = {
   name: "",
   email: "",
   phone: "",
   suburb: "",
   service: cleaning.services[0].title,
   message: "",
+  company: "",
 };
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type Outcome =
+  /** Delivered server-side. */
+  | { kind: "sent" }
+  /** No provider configured — handed to the visitor's mail client instead. */
+  | { kind: "mailto" }
+  | { kind: "error"; message: string };
 
 /**
  * Quote request form.
  *
- * ⚠️  There is no backend yet. On submit this composes a pre-filled email and
- *     hands it to the visitor's mail client, which works on a static host with
- *     no server and no third-party dependency.
- *
- *     To take submissions server-side instead, replace `handleSubmit` with a
- *     Server Action (or a POST to /api/quote) — the validation below already
- *     produces a clean `Fields` object to send.
+ * Submits through a Server Action, which validates again server-side and
+ * delivers via whichever provider is configured. If none is (the default on a
+ * fresh deploy), the action reports `unconfigured` and we fall back to opening
+ * the visitor's mail client — so the form is never a dead end.
  */
 export default function QuoteForm() {
-  const [fields, setFields] = useState<Fields>(EMPTY);
-  const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
-  const [sent, setSent] = useState(false);
+  const [fields, setFields] = useState<QuoteFields>(EMPTY);
+  const [errors, setErrors] = useState<QuoteErrors>({});
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [pending, startTransition] = useTransition();
+  const startedAt = useRef<number>(0);
 
-  const set = (key: keyof Fields) => (
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
-  ) => {
-    setFields((prev) => ({ ...prev, [key]: event.target.value }));
-    setErrors((prev) => ({ ...prev, [key]: undefined }));
-  };
+  useEffect(() => {
+    startedAt.current = Date.now();
+  }, []);
 
-  const validate = () => {
-    const next: Partial<Record<keyof Fields, string>> = {};
-    if (!fields.name.trim()) next.name = "Please tell us your name.";
-    if (!EMAIL_PATTERN.test(fields.email)) next.email = "Enter a valid email address.";
-    if (!fields.suburb.trim()) next.suburb = "Which suburb is the site in?";
-    if (fields.message.trim().length < 10) {
-      next.message = "A sentence or two about the space helps us quote it.";
-    }
-    setErrors(next);
-    return Object.keys(next).length === 0;
+  const set =
+    (key: keyof QuoteFields) =>
+    (
+      event: React.ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >,
+    ) => {
+      setFields((prev) => ({ ...prev, [key]: event.target.value }));
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    };
+
+  const openMailClient = (payload: QuoteFields) => {
+    window.location.href = `mailto:${contact.emailCleaning}?subject=${encodeURIComponent(
+      formatQuoteSubject(payload),
+    )}&body=${encodeURIComponent(formatQuoteBody(payload))}`;
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!validate()) return;
+    if (pending) return;
 
-    const body = [
-      `Name: ${fields.name}`,
-      `Email: ${fields.email}`,
-      `Phone: ${fields.phone || "—"}`,
-      `Suburb: ${fields.suburb}`,
-      `Service: ${fields.service}`,
-      "",
-      fields.message,
-    ].join("\n");
+    const found = validateQuote(fields);
+    setErrors(found);
+    if (Object.keys(found).length > 0) return;
 
-    window.location.href = `mailto:${contact.emailCleaning}?subject=${encodeURIComponent(
-      `Quote request — ${fields.service}`,
-    )}&body=${encodeURIComponent(body)}`;
+    const payload = { ...fields, startedAt: startedAt.current };
 
-    setSent(true);
+    startTransition(async () => {
+      try {
+        const result = await submitQuote(payload);
+
+        if (result.ok) {
+          setOutcome({ kind: "sent" });
+          return;
+        }
+
+        if (result.reason === "unconfigured") {
+          openMailClient(payload);
+          setOutcome({ kind: "mailto" });
+          return;
+        }
+
+        if (result.reason === "validation" && result.errors) {
+          setErrors(result.errors);
+          return;
+        }
+
+        setOutcome({
+          kind: "error",
+          message:
+            result.reason === "rate-limited"
+              ? "That's a few requests in a short time. Give it a few minutes, or call us and we'll sort it now."
+              : "Something went wrong sending that. Please call us and we'll take the details directly.",
+        });
+      } catch {
+        // The action itself was unreachable (offline, deploy in progress).
+        // Falling back is better than losing the enquiry.
+        openMailClient(payload);
+        setOutcome({ kind: "mailto" });
+      }
+    });
   };
 
   const field =
-    "w-full rounded-xl border border-white/10 bg-elevated/40 px-4 py-3.5 text-sm text-bone outline-none transition-colors duration-300 placeholder:text-mist/50 focus:border-accent/60";
+    "w-full rounded-xl border border-white/10 bg-elevated/40 px-4 py-3.5 text-sm text-bone outline-none transition-colors duration-300 placeholder:text-mist/50 focus:border-accent/60 disabled:opacity-60";
 
-  if (sent) {
+  const reset = () => {
+    setFields(EMPTY);
+    setErrors({});
+    setOutcome(null);
+    startedAt.current = Date.now();
+  };
+
+  if (outcome && outcome.kind !== "error") {
+    const delivered = outcome.kind === "sent";
     return (
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="glass rounded-card p-10 text-center"
+        role="status"
       >
         <span className="mx-auto grid size-12 place-items-center rounded-full border border-accent/40 bg-accent/10">
           <svg
@@ -108,18 +149,16 @@ export default function QuoteForm() {
           </svg>
         </span>
         <h3 className="mt-6 font-display text-2xl font-semibold tracking-tight">
-          Your email is ready to send
+          {delivered ? "Request received" : "Your email is ready to send"}
         </h3>
         <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-mist">
-          We have opened your mail app with the details filled in. Send it and
-          we will come back to you within one business day.
+          {delivered
+            ? "Thanks — we have your details and will come back to you within one business day."
+            : "We have opened your mail app with the details filled in. Send it and we will come back to you within one business day."}
         </p>
         <button
           type="button"
-          onClick={() => {
-            setFields(EMPTY);
-            setSent(false);
-          }}
+          onClick={reset}
           className="mt-7 text-sm text-accent underline underline-offset-4 transition-opacity hover:opacity-70"
         >
           Start another request
@@ -130,6 +169,20 @@ export default function QuoteForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+      {/* Honeypot: off-screen and skipped by keyboard, so only bots fill it. */}
+      <div aria-hidden className="sr-only">
+        <label htmlFor="company-website">Company website</label>
+        <input
+          id="company-website"
+          name="company"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={fields.company ?? ""}
+          onChange={set("company")}
+        />
+      </div>
+
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="flex flex-col gap-2">
           <span className="text-[11px] uppercase tracking-[0.2em] text-mist">
@@ -138,6 +191,8 @@ export default function QuoteForm() {
           <input
             value={fields.name}
             onChange={set("name")}
+            disabled={pending}
+            autoComplete="name"
             placeholder="Your name"
             className={cn(field, errors.name && "border-red-400/60")}
             aria-invalid={Boolean(errors.name)}
@@ -155,6 +210,8 @@ export default function QuoteForm() {
             type="email"
             value={fields.email}
             onChange={set("email")}
+            disabled={pending}
+            autoComplete="email"
             placeholder="you@company.com.au"
             className={cn(field, errors.email && "border-red-400/60")}
             aria-invalid={Boolean(errors.email)}
@@ -172,9 +229,14 @@ export default function QuoteForm() {
             type="tel"
             value={fields.phone}
             onChange={set("phone")}
+            disabled={pending}
+            autoComplete="tel"
             placeholder="04XX XXX XXX"
-            className={field}
+            className={cn(field, errors.phone && "border-red-400/60")}
           />
+          {errors.phone ? (
+            <span className="text-xs text-red-400/90">{errors.phone}</span>
+          ) : null}
         </label>
 
         <label className="flex flex-col gap-2">
@@ -184,6 +246,8 @@ export default function QuoteForm() {
           <input
             value={fields.suburb}
             onChange={set("suburb")}
+            disabled={pending}
+            autoComplete="address-level2"
             placeholder="Where is the site?"
             className={cn(field, errors.suburb && "border-red-400/60")}
             aria-invalid={Boolean(errors.suburb)}
@@ -198,15 +262,17 @@ export default function QuoteForm() {
         <span className="text-[11px] uppercase tracking-[0.2em] text-mist">
           Service
         </span>
-        <select value={fields.service} onChange={set("service")} className={field}>
-          {cleaning.services.map((service) => (
-            <option key={service.slug} value={service.title} className="bg-ink">
-              {service.title}
+        <select
+          value={fields.service}
+          onChange={set("service")}
+          disabled={pending}
+          className={field}
+        >
+          {SERVICE_OPTIONS.map((option) => (
+            <option key={option} value={option} className="bg-ink">
+              {option}
             </option>
           ))}
-          <option value="Something else" className="bg-ink">
-            Something else
-          </option>
         </select>
       </label>
 
@@ -217,6 +283,7 @@ export default function QuoteForm() {
         <textarea
           value={fields.message}
           onChange={set("message")}
+          disabled={pending}
           rows={5}
           placeholder="Size, how often you need it, anything specific we should know."
           className={cn(field, "resize-none", errors.message && "border-red-400/60")}
@@ -227,9 +294,26 @@ export default function QuoteForm() {
         ) : null}
       </label>
 
-      <Button type="submit" className="mt-2 w-full sm:w-auto sm:self-start">
-        Send request
-        <Arrow />
+      {outcome?.kind === "error" ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-red-400/30 bg-red-400/8 px-4 py-3.5 text-sm leading-relaxed text-red-200/90"
+        >
+          {outcome.message}{" "}
+          <a href={contact.phoneHref} className="underline underline-offset-4">
+            {contact.phoneDisplay}
+          </a>
+        </p>
+      ) : null}
+
+      <Button
+        type="submit"
+        disabled={pending}
+        aria-busy={pending}
+        className="mt-2 w-full sm:w-auto sm:self-start"
+      >
+        {pending ? "Sending…" : "Send request"}
+        {pending ? null : <Arrow />}
       </Button>
 
       <p className="text-xs leading-relaxed text-mist/70">
