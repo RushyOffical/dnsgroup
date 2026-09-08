@@ -17,7 +17,7 @@ export default function ServiceAreas() {
               <span className="text-gradient">{contact.region}.</span>
             </>
           }
-          body="If your site sits outside these areas, ask anyway — we travel for contract work and will tell you straight if we cannot service you well."
+          body="If your site sits outside these areas, ask anyway — we travel across Victoria for contract work and will tell you straight if we cannot service you well."
         />
 
         <div className="flex flex-wrap content-start gap-2.5">

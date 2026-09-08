@@ -28,10 +28,10 @@ export const metadata: Metadata = {
   keywords: [
     "Don and Silva Group",
     "Don and Silva Cleaning",
-    "commercial cleaning Australia",
-    "office cleaning",
-    "end of lease cleaning",
-    "strata cleaning",
+    "commercial cleaning Melbourne",
+    "office cleaning Melbourne",
+    "end of lease cleaning Melbourne",
+    "strata cleaning Victoria",
   ],
   openGraph: {
     type: "website",

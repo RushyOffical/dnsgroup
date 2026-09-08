@@ -175,7 +175,7 @@ export const cleaning = {
   hero: {
     line1: "Spotless,",
     line2: "on schedule.",
-    body: "Commercial and residential cleaning across Australia. Fully insured crews, a written checklist for every site, and the same finish on week fifty as on day one.",
+    body: "Commercial and residential cleaning across Melbourne and Victoria. Fully insured crews, a written checklist for every site, and the same finish on week fifty as on day one.",
   },
 
   promise:
@@ -306,17 +306,18 @@ export const cleaning = {
   ],
 
   /**
-   * TODO: confirm the real service areas before launch.
+   * TODO: trim or extend to the areas you actually cover. These are the
+   * standard Melbourne metro groupings, not a confirmed coverage map.
    */
   serviceAreas: [
-    "Sydney Metro",
-    "Inner West",
+    "Melbourne CBD",
+    "Inner North",
+    "Inner East",
+    "Bayside",
     "Eastern Suburbs",
-    "North Shore",
-    "Western Sydney",
-    "Parramatta",
-    "Hills District",
-    "Sutherland Shire",
+    "South East",
+    "Western Suburbs",
+    "Northern Suburbs",
   ],
 
   faqs: [
@@ -361,8 +362,8 @@ export const contact = {
   email: "hello@donandsilvagroup.com.au",
   emailCleaning: "cleaning@donandsilvagroup.com.au",
   abn: "00 000 000 000",
-  region: "New South Wales, Australia",
-  hours: "Mon–Sat, 7:00am – 6:00pm AEST",
+  region: "Melbourne & Victoria, Australia",
+  hours: "Mon–Sat, 7:00am – 6:00pm (Melbourne time)",
   socials: [
     { label: "Instagram", href: "#" },
     { label: "Facebook", href: "#" },
