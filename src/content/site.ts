@@ -31,8 +31,8 @@ export type Service = {
   title: string;
   blurb: string;
   points: string[];
-  /** Drives which 3D primitive the service card renders. */
-  shape: "prism" | "torus" | "capsule" | "octa" | "sphere" | "box";
+  /** Which piece of cleaning equipment represents this service in 3D. */
+  model: "spray" | "bucket" | "vacuum" | "keys" | "building" | "hardhat";
 };
 
 /* -------------------------------------------------------------------------- */
@@ -147,7 +147,7 @@ export const cleaning = {
         "Consumables restocked and tracked",
         "After-hours access and alarm handling",
       ],
-      shape: "prism",
+      model: "spray",
     },
     {
       slug: "end-of-lease",
@@ -160,7 +160,7 @@ export const cleaning = {
         "Carpet steam clean available",
         "Free re-clean if the agent flags anything",
       ],
-      shape: "box",
+      model: "keys",
     },
     {
       slug: "strata",
@@ -173,7 +173,7 @@ export const cleaning = {
         "Car park and stairwell sweeping",
         "Reporting back to the committee",
       ],
-      shape: "torus",
+      model: "building",
     },
     {
       slug: "construction",
@@ -186,7 +186,7 @@ export const cleaning = {
         "Window, track and frame detailing",
         "Coordinated around trade schedules",
       ],
-      shape: "octa",
+      model: "hardhat",
     },
     {
       slug: "deep-clean",
@@ -199,7 +199,7 @@ export const cleaning = {
         "Mould and grout treatment",
         "Before-and-after photo record",
       ],
-      shape: "sphere",
+      model: "bucket",
     },
     {
       slug: "domestic",
@@ -212,7 +212,7 @@ export const cleaning = {
         "Products safe around kids and pets",
         "Skip or reschedule any visit free",
       ],
-      shape: "capsule",
+      model: "vacuum",
     },
   ] satisfies Service[],
 

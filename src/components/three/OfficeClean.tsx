@@ -52,11 +52,24 @@ type Key = { at: number; pos: [number, number, number]; look: [number, number, n
 /** Each pass gets the framing that actually shows it: the desk for the wipe,
  *  the floor for the vacuum, a low raking angle for the mop's gloss. */
 const KEYS: Key[] = [
-  { at: 0.0, pos: [7.4, 4.8, 8.8], look: [0, 1.1, -1] },
-  { at: 0.27, pos: [1.7, 2.4, 3.3], look: [-1.35, 1.0, -1.1] },
-  { at: 0.53, pos: [4.3, 2.1, 5.0], look: [0.2, 0.15, 0.3] },
-  { at: 0.79, pos: [2.9, 1.55, 4.4], look: [-0.3, 0.12, 0.1] },
-  { at: 1.0, pos: [6.2, 3.15, 8.4], look: [0, 1.55, -1.6] },
+  // Establish
+  { at: 0.0, pos: [8.2, 5.2, 9.6], look: [0, 1.1, -1] },
+  { at: 0.05, pos: [6.4, 4.1, 7.6], look: [-0.4, 1.1, -1] },
+  // Pass 1 — push in on the desk, then drift along it
+  { at: 0.14, pos: [2.2, 2.6, 3.8], look: [-1.35, 1.0, -1.1] },
+  { at: 0.23, pos: [1.2, 2.2, 3.0], look: [-1.5, 0.95, -1.15] },
+  { at: 0.29, pos: [3.0, 2.6, 4.4], look: [-0.6, 0.6, -0.6] },
+  // Pass 2 — drop to the floor
+  { at: 0.38, pos: [4.4, 2.0, 5.0], look: [0.2, 0.15, 0.3] },
+  { at: 0.47, pos: [3.6, 1.7, 4.6], look: [-0.1, 0.1, 0.4] },
+  { at: 0.53, pos: [3.2, 1.6, 4.4], look: [-0.2, 0.1, 0.3] },
+  // Pass 3 — rake low across the wet floor
+  { at: 0.62, pos: [2.9, 1.3, 4.2], look: [-0.3, 0.1, 0.1] },
+  { at: 0.71, pos: [3.4, 1.15, 4.6], look: [0.1, 0.12, 0.2] },
+  // Pass 4 — lift away and resolve the room
+  { at: 0.83, pos: [4.6, 2.3, 6.4], look: [0, 0.9, -0.9] },
+  { at: 0.95, pos: [6.0, 3.1, 8.2], look: [0, 1.5, -1.5] },
+  { at: 1.0, pos: [6.6, 3.35, 8.9], look: [0, 1.6, -1.7] },
 ];
 
 function CameraRig({
@@ -82,7 +95,9 @@ function CameraRig({
     const to = KEYS[i + 1];
     const span = Math.max(0.0001, to.at - from.at);
     const raw = clamp01((p - from.at) / span);
-    const t = raw * raw * (3 - 2 * raw);
+    // Cubic in/out — gentler at each keyframe boundary than smoothstep, so
+    // a long chain of beats reads as one continuous move.
+    const t = raw < 0.5 ? 4 * raw * raw * raw : 1 - Math.pow(-2 * raw + 2, 3) / 2;
 
     a.set(...from.pos);
     b.set(...to.pos);
@@ -98,7 +113,7 @@ function CameraRig({
       posTarget.y += pointer.y * 0.28;
     }
 
-    const damp = 1 - Math.pow(0.0008, delta);
+    const damp = 1 - Math.pow(0.004, delta);
     camera.position.lerp(posTarget, damp);
     lookCurrent.lerp(lookTarget, damp);
     camera.lookAt(lookCurrent);

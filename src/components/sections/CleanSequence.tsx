@@ -51,9 +51,10 @@ export default function CleanSequence() {
       id="method"
       ref={container}
       className="relative scroll-mt-24"
-      /* The scroll distance is the timeline. Four passes need room to breathe;
-         much shorter and the camera moves feel rushed. */
-      style={{ height: "460vh" }}
+      /* The scroll distance is the timeline. Long on purpose: each pass gets
+         roughly a screen and a half, so the camera glides between beats
+         instead of cutting between them. */
+      style={{ height: "720vh" }}
     >
       <div className="sticky top-0 h-svh w-full overflow-hidden bg-ink">
         <Stage

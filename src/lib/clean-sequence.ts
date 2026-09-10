@@ -8,10 +8,13 @@
 
 export type Window = [number, number];
 
-export const WIPE: Window = [0.04, 0.27];
-export const VACUUM: Window = [0.31, 0.53];
-export const MOP: Window = [0.57, 0.79];
-export const SHINE: Window = [0.82, 0.98];
+/* Widened, with longer gaps between them. Each pass now holds for longer
+   before the camera moves on, which is what makes the whole run feel
+   unhurried rather than like four quick cuts. */
+export const WIPE: Window = [0.05, 0.23];
+export const VACUUM: Window = [0.29, 0.47];
+export const MOP: Window = [0.53, 0.71];
+export const SHINE: Window = [0.77, 0.95];
 
 export const WINDOWS: Window[] = [WIPE, VACUUM, MOP, SHINE];
 

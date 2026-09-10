@@ -125,7 +125,7 @@ export default function ServicesShowcase() {
                 className="absolute inset-0"
                 camera={{ position: [0, 0, 4.6], fov: 45 }}
               >
-                <ServiceOrbit shape={current.shape} />
+                <ServiceOrbit model={current.model} />
               </Stage>
 
               <div

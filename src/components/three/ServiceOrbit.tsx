@@ -2,124 +2,89 @@
 
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Environment, Lightformer, Float } from "@react-three/drei";
+import { Environment, Lightformer, Float, ContactShadows } from "@react-three/drei";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import * as THREE from "three";
 import type { Service } from "@/content/site";
 import { useDeviceTier } from "@/hooks/useDeviceTier";
+import { MODELS } from "./models/CleaningObjects";
 
 const AQUA = "#2fd4c4";
 const AQUA_SOFT = "#7df3e4";
 
-/** Each service is represented by a distinct solid, keyed off `service.shape`. */
-function ShapeGeometry({ shape }: { shape: Service["shape"] }) {
-  switch (shape) {
-    case "prism":
-      return <cylinderGeometry args={[0.95, 0.95, 1.5, 6]} />;
-    case "torus":
-      return <torusGeometry args={[0.85, 0.32, 32, 96]} />;
-    case "capsule":
-      return <capsuleGeometry args={[0.6, 0.9, 16, 32]} />;
-    case "octa":
-      return <octahedronGeometry args={[1.15, 0]} />;
-    case "sphere":
-      return <sphereGeometry args={[1.05, 48, 48]} />;
-    case "box":
-    default:
-      return <boxGeometry args={[1.5, 1.5, 1.5]} />;
-  }
-}
-
-function Solid({ shape }: { shape: Service["shape"] }) {
-  const mesh = useRef<THREE.Mesh>(null);
-  const cage = useRef<THREE.Mesh>(null);
-  // Grows from 0 whenever the shape changes, so switching services reads as a
-  // transition rather than a pop.
+/**
+ * Presents the active service's equipment on a turntable.
+ *
+ * Each object grows in on change so switching services reads as a swap
+ * rather than a pop, and a slow rotation lets you read its silhouette from
+ * more than one angle.
+ */
+function Piece({ model }: { model: Service["model"] }) {
+  const group = useRef<THREE.Group>(null);
   const entry = useRef(0);
+  const Model = MODELS[model];
 
   useFrame(({ clock }, delta) => {
-    const t = clock.getElapsedTime();
-    entry.current = Math.min(1, entry.current + delta * 2.6);
+    entry.current = Math.min(1, entry.current + delta * 2.2);
     const eased = 1 - Math.pow(1 - entry.current, 3);
 
-    if (mesh.current) {
-      mesh.current.rotation.y = t * 0.4;
-      mesh.current.rotation.x = Math.sin(t * 0.3) * 0.3;
-      mesh.current.scale.setScalar(eased);
-    }
-    if (cage.current) {
-      cage.current.rotation.y = -t * 0.22;
-      cage.current.rotation.z = t * 0.14;
-      cage.current.scale.setScalar(eased * 1.62);
+    if (group.current) {
+      // Turntable, plus a settle from slightly overhead as it arrives.
+      group.current.rotation.y = clock.getElapsedTime() * 0.35;
+      group.current.scale.setScalar(eased);
+      group.current.position.y = (1 - eased) * 0.5;
     }
   });
 
   return (
-    <group>
-      <mesh ref={mesh}>
-        <ShapeGeometry shape={shape} />
-        <meshPhysicalMaterial
-          color={AQUA_SOFT}
-          metalness={0.6}
-          roughness={0.14}
-          transmission={0.55}
-          thickness={1.1}
-          ior={1.45}
-          iridescence={0.75}
-          iridescenceIOR={1.6}
-          clearcoat={1}
-          clearcoatRoughness={0.1}
-        />
-      </mesh>
-
-      <mesh ref={cage}>
-        <icosahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color={AQUA} wireframe transparent opacity={0.07} />
-      </mesh>
+    <group ref={group}>
+      <Model />
     </group>
   );
 }
 
-export default function ServiceOrbit({ shape }: { shape: Service["shape"] }) {
+export default function ServiceOrbit({ model }: { model: Service["model"] }) {
   const { tier, reducedMotion } = useDeviceTier();
 
   return (
     <>
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[4, 5, 4]} intensity={1.7} />
-      <pointLight position={[-4, 1, -2]} intensity={20} color={AQUA} />
-      <pointLight position={[3, -3, 3]} intensity={12} color="#4aa8ff" />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[4, 6, 4]} intensity={1.9} />
+      <pointLight position={[-4, 2, -2]} intensity={18} distance={14} decay={2} color={AQUA} />
+      <pointLight position={[3, -1, 3]} intensity={10} distance={12} decay={2} color="#8fc4ff" />
 
-      <Environment resolution={128} frames={1}>
-        <Lightformer
-          intensity={2.6}
-          position={[0, 4, -4]}
-          scale={[8, 4, 1]}
-          color={AQUA_SOFT}
-        />
-        <Lightformer
-          intensity={1.8}
-          position={[-5, 0, 2]}
-          scale={[2, 6, 1]}
-          color="#ffffff"
-        />
+      <Environment resolution={tier === "high" ? 256 : 128} frames={1}>
+        <Lightformer intensity={3} position={[0, 4, -4]} scale={[8, 4, 1]} color={AQUA_SOFT} />
+        <Lightformer intensity={2.2} position={[-5, 1, 3]} scale={[2, 6, 1]} color="#ffffff" />
+        <Lightformer intensity={1.4} position={[5, -1, 2]} scale={[4, 3, 1]} color={AQUA} />
       </Environment>
 
       <Float
-        speed={reducedMotion ? 0 : 1.6}
-        rotationIntensity={reducedMotion ? 0 : 0.35}
-        floatIntensity={reducedMotion ? 0 : 0.7}
+        speed={reducedMotion ? 0 : 1.3}
+        rotationIntensity={reducedMotion ? 0 : 0.12}
+        floatIntensity={reducedMotion ? 0 : 0.5}
       >
-        {/* Remounting on shape change restarts the entry animation. */}
-        <Solid key={shape} shape={shape} />
+        {/* Remounting on change restarts the entry animation. */}
+        <Piece key={model} model={model} />
       </Float>
+
+      {/* Grounds the object so it doesn't float in a void */}
+      <ContactShadows
+        position={[0, -1.35, 0]}
+        opacity={0.5}
+        scale={7}
+        blur={2.6}
+        far={3}
+        resolution={tier === "high" ? 512 : 256}
+        color="#000000"
+      />
 
       {tier === "high" ? (
         <EffectComposer enableNormalPass={false}>
           <Bloom
-            intensity={0.7}
-            luminanceThreshold={0.4}
-            luminanceSmoothing={0.85}
+            intensity={0.55}
+            luminanceThreshold={0.55}
+            luminanceSmoothing={0.9}
             mipmapBlur
           />
         </EffectComposer>
