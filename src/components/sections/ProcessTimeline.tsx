@@ -23,11 +23,11 @@ export default function ProcessTimeline() {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
-          eyebrow="How it works"
+          eyebrow="Getting started"
           title={
             <>
-              Four steps,{" "}
-              <span className="text-mist">and no surprises in any of them.</span>
+              From enquiry to{" "}
+              <span className="text-mist">your first clean.</span>
             </>
           }
         />

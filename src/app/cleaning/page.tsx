@@ -3,6 +3,7 @@ import Nav from "@/components/ui/Nav";
 import Footer from "@/components/ui/Footer";
 import CleaningHero from "@/components/sections/CleaningHero";
 import Assurances from "@/components/sections/Assurances";
+import CleanSequence from "@/components/sections/CleanSequence";
 import ServicesShowcase from "@/components/sections/ServicesShowcase";
 import ProcessTimeline from "@/components/sections/ProcessTimeline";
 import ServiceAreas from "@/components/sections/ServiceAreas";
@@ -82,6 +83,7 @@ export default function CleaningPage() {
       <main id="main" className="flex-1">
         <CleaningHero />
         <Assurances />
+        <CleanSequence />
         <ServicesShowcase />
         <ProcessTimeline />
         <ServiceAreas />

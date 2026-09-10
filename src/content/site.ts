@@ -236,6 +236,50 @@ export const cleaning = {
     },
   ],
 
+  /**
+   * The scroll-driven 3D sequence on the cleaning page.
+   *
+   * The order is the actual trade order — top down, dry before wet — not an
+   * arbitrary four steps. Describing method is safe pre-trading: it says how
+   * the work is done, not that we have already done it for anyone.
+   */
+  method: {
+    eyebrow: "The method",
+    title: "Four passes, every time,",
+    titleAccent: "in that order.",
+    body: "Cleaning has an order, and skipping it is why a room looks done but does not stay done. We work top down and dry before wet, so nothing we have already cleaned gets dirtied again.",
+    steps: [
+      {
+        key: "wipe",
+        label: "Wipe down",
+        index: "01",
+        title: "Surfaces first, top down",
+        body: "Desks, sills, screens, switches and door handles. Dust falls, so every surface is done before anything touches the floor — otherwise you are just moving it around.",
+      },
+      {
+        key: "vacuum",
+        label: "Vacuum",
+        index: "02",
+        title: "Then the floor, dry",
+        body: "Everything the wipe-down knocked loose comes up dry — grit, crumbs, hair, the edges and under the desks that get skipped when someone is rushing.",
+      },
+      {
+        key: "mop",
+        label: "Mop",
+        index: "03",
+        title: "Then the floor, wet",
+        body: "Only once it is dry-clean does water go down. Mopping over grit drags it across the floor and leaves the streaks you can see the next morning.",
+      },
+      {
+        key: "shine",
+        label: "Final pass",
+        index: "04",
+        title: "Then the once-over",
+        body: "Glass, chrome and the details you notice only when they are wrong. This is the pass that decides whether a room reads as clean or merely tidied.",
+      },
+    ],
+  },
+
   process: [
     {
       step: "01",
@@ -337,6 +381,7 @@ export const groupNav = [
 ] as const;
 
 export const cleaningNav = [
+  { label: "Method", href: "/cleaning#method" },
   { label: "Services", href: "/cleaning#services" },
   { label: "Process", href: "/cleaning#process" },
   { label: "Areas", href: "/cleaning#areas" },

@@ -4,37 +4,8 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useDeviceTier } from "@/hooks/useDeviceTier";
+import { dotTexture } from "@/lib/dot-texture";
 
-/**
- * A soft round dot, drawn once into a canvas at module scope.
- * pointsMaterial renders hard squares without one, which reads as pixel
- * garbage rather than a lattice.
- */
-function createDotTexture() {
-  const size = 64;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  if (ctx) {
-    const gradient = ctx.createRadialGradient(
-      size / 2,
-      size / 2,
-      0,
-      size / 2,
-      size / 2,
-      size / 2,
-    );
-    gradient.addColorStop(0, "rgba(255,255,255,1)");
-    gradient.addColorStop(0.4, "rgba(255,255,255,0.65)");
-    gradient.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
-  }
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
 
 /**
  * A wave-driven point lattice used as a section backdrop.
@@ -47,7 +18,7 @@ export default function Lattice({ color = "#c8a45c" }: { color?: string }) {
   const points = useRef<THREE.Points>(null);
   const { tier, reducedMotion } = useDeviceTier();
 
-  const dot = useMemo(() => createDotTexture(), []);
+  const dot = useMemo(() => dotTexture(), []);
   const grid = tier === "high" ? 78 : tier === "mid" ? 52 : 34;
   const spread = 26;
 
