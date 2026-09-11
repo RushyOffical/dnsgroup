@@ -377,6 +377,7 @@ export const groupNav = [
   { label: "Group", href: "/#group" },
   { label: "Divisions", href: "/#divisions" },
   { label: "Standard", href: "/#standard" },
+  { label: "Neural link", href: "/neural" },
   { label: "Contact", href: "/contact" },
 ] as const;
 
@@ -388,3 +389,78 @@ export const cleaningNav = [
   { label: "FAQ", href: "/cleaning#faq" },
   { label: "Contact", href: "/contact" },
 ] as const;
+
+/* -------------------------------------------------------------------------- */
+/* NEURAL LINK — the group drawn as one network                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Copy for the /neural console.
+ *
+ * The console does not carry its own list of nodes — it builds the network
+ * from the divisions, services and service areas already declared above, so
+ * adding a division adds a node without anyone touching the map. Only the
+ * framing lives here.
+ */
+export const neuralLink = {
+  name: "Neural Link",
+  eyebrow: "Neural link",
+  title: "The group,",
+  titleAccent: "wired up.",
+  body:
+    "Every area on the map, every service in the cleaning division, and the standard sitting behind them — drawn as one network. Follow any node through to the group.",
+
+  /** Shown in the console header, above the canvas. */
+  hint: "Select a node — on the network or in the index — to trace it.",
+
+  /** Right-hand panel before anything is selected. */
+  emptyTitle: "Nothing selected",
+  emptyBody:
+    "Pick a node to see what it is, what it connects to, and where it sits in the group.",
+
+  /** Section labels inside the detail panel. */
+  connectionsLabel: "Connects to",
+  detailsLabel: "What that covers",
+  indexLabel: "Network index",
+  clearLabel: "Clear selection",
+  viewLabel: "Open the page",
+
+  /**
+   * The four layers, input to output: a job starts somewhere, becomes a
+   * service, is carried out by a division, and answers to the group.
+   */
+  layers: {
+    area: {
+      label: "Coverage",
+      caption: "Where a job comes from",
+    },
+    service: {
+      label: "Services",
+      caption: "What the work actually is",
+    },
+    division: {
+      label: "Divisions",
+      caption: "Who carries it out",
+    },
+    group: {
+      label: "Group",
+      caption: "The standard behind all of it",
+    },
+  },
+
+  statusLabels: {
+    operating: "Operating",
+    "in-development": "In development",
+  },
+
+  /** Body copy for an area node. Areas are plain strings, so this fills in. */
+  areaBody: (area: string) =>
+    `${area} sits inside the area the cleaning division works across. A site here is walked, scoped in writing and quoted the same way as anywhere else on this map.`,
+
+  cta: {
+    title: "Found the part you need?",
+    body: "Tell us the site and what needs doing, and we will walk it and quote it properly.",
+    label: "Request a quote",
+    href: "/contact",
+  },
+} as const;

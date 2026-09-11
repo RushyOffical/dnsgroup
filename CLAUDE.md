@@ -14,6 +14,7 @@ that rather than for one company.
 
 - `/` — group hub
 - `/cleaning` — the cleaning division
+- `/neural` — Neural Link, the group drawn as one interactive network
 - `/contact` — shared quote form
 
 ## ⚠️ The business is PRE-TRADING. This is the most important rule here.
@@ -69,6 +70,26 @@ replacements. Ask the owner.
   but is blocked by the sandbox network policy, so none of its visual language
   is reflected here. If it becomes reachable, the design may be revisited.
 
+## Neural Link (`/neural`)
+
+A full-height app view rather than a scrolling page: coverage → services →
+divisions → group, drawn as a four-layer network you can pick through.
+
+- The graph is **derived, never authored**. `src/lib/neural.ts` builds nodes and
+  edges from `divisions`, `cleaning.services` and `cleaning.serviceAreas`, so a
+  new division or service appears on the map with no edit here. Only the framing
+  copy lives in `neuralLink` in `src/content/site.ts`.
+- Selecting a node sets `data-brand` on the console, so the whole page retints
+  through the existing brand blocks rather than a second set of colours.
+- The rig scales to the graph's own bounds (`SPAN_X` / `SPAN_Y` in
+  `NeuralField.tsx`), so it fits any viewport without a breakpoint table, and
+  turns on its side in a portrait frame. Widen the layer spacing and it
+  re-frames itself.
+- `NeuralDiagram.tsx` is a flat SVG of the same graph, used as the Stage
+  fallback so the picture survives with no WebGL. It needs
+  `fallbackMode="until-ready"` — a fallback drawing the *same subject* must
+  clear once the scene is live, or it ghosts through the alpha canvas.
+
 ## Adding a division
 
 1. Entry in `divisions` in `src/content/site.ts`
@@ -76,7 +97,8 @@ replacements. Ask the owner.
 3. Route at `src/app/<slug>/page.tsx` wrapped in `<div data-brand="<slug>">`
 4. Add to `subOrganization` in `src/app/layout.tsx` and to `src/app/sitemap.ts`
 
-Hub, footer, mobile menu and contact page pick it up automatically.
+Hub, footer, mobile menu, contact page and the Neural Link map pick it up
+automatically.
 
 ## 3D constraints
 
@@ -91,6 +113,15 @@ The site is deliberately 3D-heavy. Keep these invariants:
 - **No external 3D assets.** Lighting is `Lightformer` rigs; the lattice
   sprite is drawn to a canvas at runtime. Do not add CDN-hosted HDRIs.
 - `prefers-reduced-motion` must render final states, never skip content.
+
+## Scrolling the page from code
+
+Lenis owns the window scroll and rewrites its target every frame, so a bare
+`scrollIntoView` gets overridden mid-animation and lands short. Go through
+`scrollToElement` in `src/lib/smooth-scroll.ts`, which uses Lenis when it is
+driving and falls back to native scrolling when it is not (reduced motion).
+Both paths honour the target's own `scroll-margin-top` — set the offset there,
+not in the call.
 
 ## Quote form
 

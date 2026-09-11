@@ -2,6 +2,7 @@
 
 import Lenis from "lenis";
 import { useEffect } from "react";
+import { registerSmoothScroll } from "@/lib/smooth-scroll";
 
 /**
  * Lenis drives the page scroll so scroll-linked 3D camera moves interpolate
@@ -19,6 +20,10 @@ export default function SmoothScroll() {
       // Native momentum on touch is better than anything we'd simulate.
       syncTouch: false,
     });
+
+    // Published so anything that needs to move the page goes through Lenis
+    // rather than fighting it. See lib/smooth-scroll.
+    registerSmoothScroll(lenis);
 
     let frame = 0;
     const raf = (time: number) => {
@@ -46,6 +51,7 @@ export default function SmoothScroll() {
     return () => {
       document.removeEventListener("click", onHashClick);
       cancelAnimationFrame(frame);
+      registerSmoothScroll(null);
       lenis.destroy();
     };
   }, []);

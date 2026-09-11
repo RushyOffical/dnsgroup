@@ -21,6 +21,17 @@ type StageProps = {
   camera?: CanvasProps["camera"];
   /** Keep rendering while scrolled out of view. Almost never wanted. */
   alwaysRender?: boolean;
+  /** Fires when a click inside the canvas hits no interactive object. */
+  onPointerMissed?: CanvasProps["onPointerMissed"];
+  /**
+   * What to do with the fallback once the canvas is live.
+   *
+   * `"behind"` leaves it painted underneath — right for a gradient glow that
+   * is part of the look. `"until-ready"` clears it the moment the scene has
+   * drawn, which is what a fallback showing the *same subject* needs, or it
+   * ghosts through the alpha canvas as a second, misaligned copy.
+   */
+  fallbackMode?: "behind" | "until-ready";
 };
 
 /**
@@ -37,11 +48,14 @@ export default function Stage({
   fallback,
   camera = { position: [0, 0, 6], fov: 40 },
   alwaysRender = false,
+  onPointerMissed,
+  fallbackMode = "behind",
 }: StageProps) {
   const host = useRef<HTMLDivElement>(null);
   const { dpr, ready } = useDeviceTier();
   const [visible, setVisible] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [drawn, setDrawn] = useState(false);
 
   useEffect(() => {
     const node = host.current;
@@ -55,10 +69,12 @@ export default function Stage({
   }, []);
 
   const active = alwaysRender || visible;
+  const showFallback =
+    fallbackMode === "behind" || failed || !drawn;
 
   return (
     <div ref={host} className={cn("relative", className)}>
-      {fallback ? (
+      {fallback && showFallback ? (
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 z-0"
@@ -73,6 +89,7 @@ export default function Stage({
           dpr={dpr}
           camera={camera}
           frameloop={active ? "always" : "never"}
+          onPointerMissed={onPointerMissed}
           gl={{
             antialias: false,
             alpha: true,
@@ -88,6 +105,11 @@ export default function Stage({
                 setFailed(true);
               },
               { once: true },
+            );
+            // Two frames: one for R3F to commit the scene, one for it to be
+            // on screen. Any earlier and clearing the fallback flashes.
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => setDrawn(true)),
             );
           }}
         >
