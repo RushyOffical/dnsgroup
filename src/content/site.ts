@@ -43,8 +43,8 @@ export const group = {
   name: "Don & Silva Group",
   shortName: "D&S Group",
   initials: "DS",
-  domain: "donandsilvagroup.com.au",
-  url: "https://donandsilvagroup.com.au",
+  domain: "donsilvagroup.com",
+  url: "https://donsilvagroup.com",
   tagline: "One standard. Every service.",
   eyebrow: "Australian owned & operated",
 
