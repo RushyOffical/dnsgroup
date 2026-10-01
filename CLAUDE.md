@@ -92,13 +92,28 @@ The site is deliberately 3D-heavy. Keep these invariants:
   sprite is drawn to a canvas at runtime. Do not add CDN-hosted HDRIs.
 - `prefers-reduced-motion` must render final states, never skip content.
 
+## Hosting: GitHub Pages, static export
+
+The owner chose GitHub Pages (free, commercial use allowed) over Vercel, whose
+free tier forbids commercial sites. `next.config.ts` sets `output: "export"`
+and `trailingSlash: true`, so **nothing may need a server at runtime**: no
+Server Actions, route handlers, `headers()`/`cookies()`, or ISR. Metadata
+routes (`robots.ts`, `sitemap.ts`) need `dynamic = "force-static"`.
+
+- Domain: `donsilvagroup.com` (registered via Google Domains, now managed at
+  Squarespace). `public/CNAME` must match it.
+- `.github/workflows/deploy.yml` builds and publishes on every push to `main`.
+
 ## Quote form
 
-Server Action at `src/app/actions/quote.ts`. Validation is shared
-(`src/lib/quote.ts`) and runs on both sides. Delivery is pluggable
-(`src/lib/delivery.ts`): Resend, webhook, or console. With nothing configured
-it returns `unconfigured` and the client falls back to mailto — **preserve
-that fallback**, it is what keeps the form working on a static deploy.
+Submitted from the browser by `src/lib/submit-quote.ts` to Web3Forms, keyed
+by `NEXT_PUBLIC_WEB3FORMS_KEY` (repo Actions variable `WEB3FORMS_KEY`; the key
+is public by design). Validation is shared (`src/lib/quote.ts`). With no key
+it returns `unconfigured` and the form falls back to mailto — **preserve that
+fallback**, it is what keeps the form working before a key exists.
+
+`src/app/actions/quote.ts`, `src/lib/delivery.ts` and `src/lib/rate-limit.ts`
+are the old server-side path. Nothing imports them any more; delete them.
 
 ## Before finishing any change
 
@@ -115,4 +130,5 @@ npm run lint
   commit that exists only so the initial build had something to diff against.
 - The repo's default branch is still the working branch. After the first
   merge, the default should be switched to `main`.
-- There is no CI configured, so nothing validates a push automatically.
+- The only CI is the Pages deploy workflow; a failed build there means the
+  live site was not updated.

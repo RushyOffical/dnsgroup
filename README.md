@@ -15,8 +15,7 @@ without a redesign.
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm run build    # production build
-npm run start    # serve the production build
+npm run build    # static site into out/
 npm run lint
 ```
 
@@ -101,37 +100,34 @@ being switched off:
 
 ---
 
+## Hosting
+
+The site is a static export (`output: "export"` in `next.config.ts`) hosted on
+**GitHub Pages** at `donsilvagroup.com`. `.github/workflows/deploy.yml` builds
+and publishes it on every push to `main`. Because there is no server at
+runtime, Server Actions, route handlers and other server-only features cannot
+be used.
+
+---
+
 ## Contact form
 
-Submissions go through a **Server Action** (`src/app/actions/quote.ts`).
+Submitted from the browser by `src/lib/submit-quote.ts` to
+[Web3Forms](https://web3forms.com), which emails the enquiry on.
 
-- **Validation runs twice.** `src/lib/quote.ts` is dependency-free and shared,
-  so the browser gets instant feedback and the server re-runs the identical
-  checks — the run that actually counts.
-- **Spam protection.** An off-screen honeypot field plus a minimum fill time.
-  Both report success to the sender so a bot learns nothing, and neither is
-  delivered.
-- **Rate limiting.** 5 submissions per IP per 10 minutes, in-memory
-  (`src/lib/rate-limit.ts`). Per-instance and resets on redeploy — enough to
-  blunt a single script, not a substitute for a shared store or a WAF on a
-  multi-instance deploy.
-- **Never a dead end.** With no provider configured the action returns
-  `unconfigured` and the form falls back to opening the visitor's mail client
-  with the enquiry pre-filled. Same if the action is unreachable mid-deploy.
+- **Validation** — `src/lib/quote.ts` is dependency-free and runs as the
+  visitor types and again just before sending.
+- **Spam protection** — an off-screen honeypot field plus a minimum fill time.
+  Both report success so a bot learns nothing, and neither is sent. Web3Forms
+  adds its own spam filtering.
+- **Never a dead end** — with no key configured, or if Web3Forms is
+  unreachable, the form opens the visitor's mail client with the enquiry
+  pre-filled.
 
-### Configuring delivery
-
-Copy `.env.example` to `.env.local` and set **one** option. The provider is
-inferred from what is present; `QUOTE_PROVIDER` forces one explicitly.
-
-| Provider | Set | Behaviour |
-| --- | --- | --- |
-| `resend` | `RESEND_API_KEY` + `QUOTE_TO_EMAIL` | Emails you, with `reply_to` set to the customer |
-| `webhook` | `QUOTE_WEBHOOK_URL` | POSTs JSON to Zapier / Make / n8n / your endpoint, with an optional `X-Webhook-Secret` |
-| `console` | *(default in dev)* | Logs the enquiry to the server console |
-| `none` | *(default in prod with nothing set)* | Mailto fallback |
-
-Adding another provider is one `case` in `src/lib/delivery.ts`.
+To turn delivery on, create a free access key at web3forms.com for the inbox
+that should receive quotes, then add it as a repository variable named
+`WEB3FORMS_KEY` (Settings → Secrets and variables → Actions → Variables). For
+local testing, put `NEXT_PUBLIC_WEB3FORMS_KEY=...` in `.env.local`.
 
 ---
 

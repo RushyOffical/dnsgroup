@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { motion } from "motion/react";
 import { Button, Arrow } from "@/components/ui/Button";
-import { submitQuote } from "@/app/actions/quote";
+import { submitQuote } from "@/lib/submit-quote";
 import {
   formatQuoteBody,
   formatQuoteSubject,
@@ -26,7 +26,7 @@ const EMPTY: QuoteFields = {
 };
 
 type Outcome =
-  /** Delivered server-side. */
+  /** Delivered by the form provider. */
   | { kind: "sent" }
   /** No provider configured — handed to the visitor's mail client instead. */
   | { kind: "mailto" }
@@ -35,10 +35,10 @@ type Outcome =
 /**
  * Quote request form.
  *
- * Submits through a Server Action, which validates again server-side and
- * delivers via whichever provider is configured. If none is (the default on a
- * fresh deploy), the action reports `unconfigured` and we fall back to opening
- * the visitor's mail client — so the form is never a dead end.
+ * Submits through `submitQuote`, which delivers via Web3Forms when a key is
+ * configured. If none is (the default on a fresh deploy), it reports
+ * `unconfigured` and we fall back to opening the visitor's mail client — so
+ * the form is never a dead end.
  */
 export default function QuoteForm() {
   const [fields, setFields] = useState<QuoteFields>(EMPTY);
@@ -101,12 +101,10 @@ export default function QuoteForm() {
         setOutcome({
           kind: "error",
           message:
-            result.reason === "rate-limited"
-              ? "That's a few requests in a short time. Give it a few minutes, or call us and we'll sort it now."
-              : "Something went wrong sending that. Please call us and we'll take the details directly.",
+            "Something went wrong sending that. Please call us and we'll take the details directly.",
         });
       } catch {
-        // The action itself was unreachable (offline, deploy in progress).
+        // The form provider was unreachable (offline, blocked, outage).
         // Falling back is better than losing the enquiry.
         openMailClient(payload);
         setOutcome({ kind: "mailto" });
