@@ -70,7 +70,7 @@ export const group = {
     },
     {
       title: "Show up when we said",
-      body: "Scheduling is a promise. Our crews arrive in the window we quoted, and you hear from us before you have to chase us.",
+      body: "Scheduling is a promise. Whoever we send will arrive in the window we quote, and you will hear from us before you have to chase us.",
     },
     {
       title: "One accountable group",
@@ -208,7 +208,7 @@ export const cleaning = {
         "Regular household cleaning with the same crew each visit, so nobody has to re-explain the house.",
       points: [
         "Weekly, fortnightly or monthly",
-        "Police-checked before their first visit",
+        "Anyone entering your home police-checked first",
         "Products safe around kids and pets",
         "Skip or reschedule any visit free",
       ],
@@ -341,7 +341,7 @@ export const cleaning = {
     },
     {
       q: "Do you clean outside standard hours?",
-      a: "Yes. Most of our commercial work runs after hours or overnight so it never interrupts your business.",
+      a: "Yes. Commercial cleans can be scheduled after hours or overnight so they never interrupt your business.",
     },
   ],
 } as const;
