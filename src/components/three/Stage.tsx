@@ -21,6 +21,9 @@ type StageProps = {
   camera?: CanvasProps["camera"];
   /** Keep rendering while scrolled out of view. Almost never wanted. */
   alwaysRender?: boolean;
+  /** Enable the shadow map. Scenes that use it should bake static shadows
+   *  once rather than re-rendering them every frame. */
+  shadows?: boolean;
 };
 
 /**
@@ -37,6 +40,7 @@ export default function Stage({
   fallback,
   camera = { position: [0, 0, 6], fov: 40 },
   alwaysRender = false,
+  shadows = false,
 }: StageProps) {
   const host = useRef<HTMLDivElement>(null);
   const { dpr, ready } = useDeviceTier();
@@ -72,6 +76,7 @@ export default function Stage({
           className="!absolute inset-0 z-10"
           dpr={dpr}
           camera={camera}
+          shadows={shadows ? "soft" : false}
           frameloop={active ? "always" : "never"}
           gl={{
             antialias: false,

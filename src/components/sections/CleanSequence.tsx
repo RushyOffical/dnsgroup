@@ -171,7 +171,8 @@ export default function CleanSequence() {
         >
           <Stage
             className="absolute inset-0"
-            camera={{ position: [8.2, 4.9, 9.4], fov: 38 }}
+            camera={{ position: [5.3, 2.45, 5.6], fov: 46 }}
+            shadows
             fallback={
               <div className="size-full bg-[radial-gradient(ellipse_at_60%_50%,color-mix(in_oklab,var(--color-accent)_14%,transparent),transparent_65%)]" />
             }

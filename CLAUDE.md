@@ -108,6 +108,15 @@ and the copy is scrubbed by scroll rather than triggered at thresholds.
   back to its base style, so a faded block reappears.
 - Keep the floor's environment reflection low. The environment is at
   infinity, so a strong window reflection lands near the camera as a patch.
+  Sharp floor reflections come from the planar reflector (high tier only).
+- `EffectComposer` switches the renderer's tone mapping off. Any scene using
+  it must add a `<ToneMapping />` effect, or it renders untonemapped.
+- The office is real scale (metres, 3 m ceiling) and lit by a sun that only
+  enters through the window opening, which needs shadows. Shadows are baked
+  once (`ShadowBake`), not rendered per frame. The low tier has no shadows, so
+  its sun is scaled down and its floor kept matte to avoid glare.
+- Surface textures (concrete, plaster, skyline, screen) are generated at
+  runtime in `lib/procedural-textures.ts`; there are still no image assets.
 
 ## Hosting: GitHub Pages, static export
 
