@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type ReactNode, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import {
   ContactShadows,
   Environment,
   Lightformer,
   MeshReflectorMaterial,
+  PerformanceMonitor,
   RoundedBox,
 } from "@react-three/drei";
 import {
   Bloom,
+  DepthOfField,
   EffectComposer,
   N8AO,
   SMAA,
@@ -320,9 +322,12 @@ const CAMERA_LOOK: [number, number, number][] = [
 function CameraRig({
   progress,
   reducedMotion,
+  focus,
 }: {
   progress: RefObject<number>;
   reducedMotion: boolean;
+  /** Updated every frame with where the camera is looking, for depth of field. */
+  focus: THREE.Vector3;
 }) {
   const size = useThree((state) => state.size);
   const get = useThree((state) => state.get);
@@ -401,6 +406,7 @@ function CameraRig({
       lookCurrent.lerp(lookTarget, k);
     }
     camera.lookAt(lookCurrent);
+    focus.copy(lookCurrent);
   });
 
   return null;
@@ -684,6 +690,7 @@ const CONTACTS: { x: number; z: number; w: number; d: number; o: number }[] = [
   { x: DESK.x - DESK.length / 2 + 0.12, z: DESK.z, w: 0.22, d: 1.55, o: 0.4 }, // desk sled
   { x: DESK.x + DESK.length / 2 - 0.12, z: DESK.z, w: 0.22, d: 1.55, o: 0.4 },
   { x: DESK.x, z: DESK.z, w: 3.2, d: 1.7, o: 0.18 }, // the desk's broad shade
+  { x: ROOM.xMin + 0.45, z: 0.1, w: 0.55, d: 0.55, o: 0.45 }, // floor lamp
 ];
 
 function ContactBlobs() {
@@ -792,6 +799,27 @@ function Window({ progress }: { progress: RefObject<number> }) {
           {frame}
         </mesh>
       ))}
+
+      {/* Roller blind, part-drawn: the cassette and a translucent fabric
+          that softens the top of the sun patch */}
+      <mesh position={[WIN_CX, WIN.y1 + 0.05, z + 0.05]} castShadow>
+        <boxGeometry args={[WIN_W + 0.1, 0.1, 0.1]} />
+        <meshStandardMaterial color="#e3e3e0" roughness={0.6} />
+      </mesh>
+      <mesh position={[WIN_CX, WIN.y1 - WIN_H * 0.11, z + 0.04]} castShadow>
+        <planeGeometry args={[WIN_W - 0.02, WIN_H * 0.22]} />
+        <meshStandardMaterial
+          color="#f1efe9"
+          roughness={0.95}
+          transparent
+          opacity={0.92}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh position={[WIN_CX, WIN.y1 - WIN_H * 0.22, z + 0.04]}>
+        <boxGeometry args={[WIN_W - 0.02, 0.025, 0.02]} />
+        <meshStandardMaterial color="#c8c8c4" roughness={0.4} metalness={0.4} />
+      </mesh>
 
       {/* Sill */}
       <mesh position={[WIN_CX, WIN.y0 - 0.02, z + 0.06]} castShadow receiveShadow>
@@ -1317,6 +1345,135 @@ function Pendant() {
   );
 }
 
+/** Floating shelves on the back wall behind the desk. */
+function WallShelves() {
+  const z = ROOM.zBack + 0.13;
+  const books = useMemo(() => {
+    const row: { x: number; w: number; h: number; colour: string; lean: number }[] = [];
+    let cursor = -2.55;
+    for (let i = 0; i < 11; i++) {
+      const w = 0.03 + rand(i, 71) * 0.025;
+      row.push({
+        x: cursor + w / 2,
+        w,
+        h: 0.2 + rand(i, 72) * 0.08,
+        colour: ["#283245", "#9b6b46", "#d6d0c4", "#2f6f68", "#4a3b31", "#c9b48f"][Math.floor(rand(i, 73) * 6)],
+        // The last one leans on its neighbour
+        lean: i === 10 ? 0.25 : 0,
+      });
+      cursor += w + 0.004;
+    }
+    return row;
+  }, []);
+
+  return (
+    <group>
+      {[1.35, 1.8].map((y) => (
+        <RoundedBox key={y} args={[1.6, 0.03, 0.24]} radius={0.006} smoothness={2} position={[-1.85, y, z]} castShadow receiveShadow>
+          <meshStandardMaterial color="#7a5c45" roughness={0.6} />
+        </RoundedBox>
+      ))}
+      {books.map((b, i) => (
+        <mesh key={i} position={[b.x + b.lean * 0.05, 1.365 + b.h / 2, z]} rotation={[0, 0, -b.lean]} castShadow>
+          <boxGeometry args={[b.w, b.h, 0.17]} />
+          <meshStandardMaterial color={b.colour} roughness={0.85} />
+        </mesh>
+      ))}
+      {/* A small plant and a frame on the upper shelf */}
+      <mesh position={[-2.3, 1.87, z]} castShadow>
+        <cylinderGeometry args={[0.055, 0.045, 0.11, 24]} />
+        <meshStandardMaterial color="#d9d6cf" roughness={0.5} />
+      </mesh>
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <mesh
+          key={i}
+          position={[-2.3 + Math.cos(i) * 0.02, 1.96, z + Math.sin(i) * 0.02]}
+          rotation={[Math.sin(i * 2) * 0.5, i, Math.cos(i * 2) * 0.5]}
+          castShadow
+        >
+          <sphereGeometry args={[0.035, 10, 8]} />
+          <meshStandardMaterial color="#3d7a4f" roughness={0.7} />
+        </mesh>
+      ))}
+      <group position={[-1.5, 1.95, z - 0.04]} rotation={[-0.08, 0, 0]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.22, 0.28, 0.02]} />
+          <meshStandardMaterial color="#15171c" roughness={0.5} />
+        </mesh>
+        <mesh position={[0, 0, 0.011]}>
+          <planeGeometry args={[0.18, 0.24]} />
+          <meshStandardMaterial color="#d8d3c8" roughness={0.9} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+/** Arc floor lamp beside the credenza. */
+function FloorLamp() {
+  const metal = <meshStandardMaterial color="#1b1d22" roughness={0.3} metalness={0.8} />;
+  return (
+    <group position={[ROOM.xMin + 0.45, 0, 0.1]}>
+      <mesh position={[0, 0.015, 0]} castShadow>
+        <cylinderGeometry args={[0.16, 0.17, 0.03, 32]} />
+        {metal}
+      </mesh>
+      <mesh position={[0, 0.8, 0]} castShadow>
+        <cylinderGeometry args={[0.012, 0.012, 1.6, 12]} />
+        {metal}
+      </mesh>
+      <mesh position={[0.18, 1.58, 0]} rotation={[0, 0, -1.1]} castShadow>
+        <cylinderGeometry args={[0.01, 0.01, 0.42, 10]} />
+        {metal}
+      </mesh>
+      <mesh position={[0.36, 1.62, 0]} castShadow>
+        <cylinderGeometry args={[0.1, 0.17, 0.2, 32, 1, true]} />
+        <meshStandardMaterial color="#e9e4d8" roughness={0.9} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0.36, 1.6, 0]}>
+        <sphereGeometry args={[0.04, 16, 10]} />
+        <meshBasicMaterial color={[2.6, 2.2, 1.7]} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/** A plain wall clock on the left wall, reading ten past eight. */
+function WallClock() {
+  const hand = (angle: number, length: number, width: number, zOffset: number) => (
+    <mesh
+      position={[Math.sin(angle) * length * 0.4, Math.cos(angle) * length * 0.4, zOffset]}
+      rotation={[0, 0, -angle]}
+    >
+      <planeGeometry args={[width, length]} />
+      <meshBasicMaterial color="#1b1d22" />
+    </mesh>
+  );
+  return (
+    <group position={[ROOM.xMin + 0.02, 2.2, 0.9]} rotation={[0, Math.PI / 2, 0]}>
+      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.17, 0.17, 0.035, 48]} />
+        <meshStandardMaterial color="#16181d" roughness={0.4} />
+      </mesh>
+      <mesh position={[0, 0, 0.018]}>
+        <circleGeometry args={[0.155, 48]} />
+        <meshStandardMaterial color="#f3f2ee" roughness={0.7} />
+      </mesh>
+      {Array.from({ length: 12 }, (_, i) => {
+        const a = (i / 12) * Math.PI * 2;
+        return (
+          <mesh key={i} position={[Math.sin(a) * 0.135, Math.cos(a) * 0.135, 0.02]} rotation={[0, 0, -a]}>
+            <planeGeometry args={[0.006, i % 3 === 0 ? 0.03 : 0.015]} />
+            <meshBasicMaterial color="#1b1d22" />
+          </mesh>
+        );
+      })}
+      {hand((8 / 12 + 10 / 720) * Math.PI * 2, 0.09, 0.009, 0.021)}
+      {hand((10 / 60) * Math.PI * 2, 0.125, 0.006, 0.022)}
+    </group>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* Pass 1 — dust lifted off the desk as the wipe passes                        */
 /* -------------------------------------------------------------------------- */
@@ -1401,7 +1558,7 @@ function Grit({ progress, count }: { progress: RefObject<number>; count: number 
           x,
           z,
           // Mostly crumbs of a few millimetres, the odd bigger piece
-          s: 0.004 + Math.pow(rand(i, 4), 3) * 0.018,
+          s: 0.006 + Math.pow(rand(i, 4), 2.2) * 0.024,
           along: x * dir.x + z * dir.y,
           tone: rand(i, 8),
         };
@@ -1568,10 +1725,17 @@ function RendererTone({ composited }: { composited: boolean }) {
   return null;
 }
 
-function Effects({ tier }: { tier: DeviceTier }): ReactNode {
+function Effects({ tier, focus }: { tier: DeviceTier; focus: THREE.Vector3 }): ReactNode {
   if (tier === "low") return null;
   return (
     <EffectComposer enableNormalPass={false} multisampling={0}>
+      {/* A shallow, photographic depth of field that follows the subject of
+          each beat. High tier only: it is the most expensive pass here. */}
+      {tier === "high" ? (
+        <DepthOfField target={focus} worldFocusRange={3.2} bokehScale={1.6} />
+      ) : (
+        <></>
+      )}
       <N8AO
         aoRadius={0.7}
         distanceFalloff={0.8}
@@ -1593,16 +1757,35 @@ function Effects({ tier }: { tier: DeviceTier }): ReactNode {
 }
 
 export default function OfficeClean({ progress }: { progress: RefObject<number> }) {
-  const { tier, reducedMotion } = useDeviceTier();
+  const { tier: measured, reducedMotion } = useDeviceTier();
+  const setDpr = useThree((state) => state.setDpr);
+
+  /*
+   * The device grade is a guess from core count and memory; the frame rate
+   * is the truth. If frames drop, step down one tier (once) and render at
+   * 1x — a smooth scroll matters more than the most expensive effects.
+   */
+  const [steppedDown, setSteppedDown] = useState(false);
+  const tier: DeviceTier =
+    steppedDown && measured === "high" ? "mid" : steppedDown && measured === "mid" ? "low" : measured;
   const smoothed = useRef(0);
+  const focus = useMemo(() => new THREE.Vector3(...CAMERA_LOOK[0]), []);
 
   const gritCount = tier === "high" ? 260 : tier === "mid" ? 170 : 90;
   const dustCount = tier === "high" ? 140 : tier === "mid" ? 80 : 40;
 
   return (
     <>
+      <PerformanceMonitor
+        bounds={() => [40, 58]}
+        flipflops={1}
+        onDecline={() => {
+          setSteppedDown(true);
+          setDpr(1);
+        }}
+      />
       <Driver targetRef={progress} smoothedRef={smoothed} />
-      <CameraRig progress={smoothed} reducedMotion={reducedMotion} />
+      <CameraRig progress={smoothed} reducedMotion={reducedMotion} focus={focus} />
       <LightRig progress={smoothed} tier={tier} />
       {tier !== "low" ? <ShadowBake /> : null}
       <RendererTone composited={tier !== "low"} />
@@ -1625,6 +1808,9 @@ export default function OfficeClean({ progress }: { progress: RefObject<number> 
       <Plant position={[0.55, 0, -4.85]} />
       <Credenza />
       <Pendant />
+      <WallShelves />
+      <FloorLamp />
+      <WallClock />
       <ContactBlobs />
 
       {/* Ambient occlusion grounds furniture on the composited tiers; the
@@ -1647,7 +1833,7 @@ export default function OfficeClean({ progress }: { progress: RefObject<number> 
       <Sparkles progress={smoothed} />
       <Sunbeam progress={smoothed} motes={tier === "high" ? 160 : tier === "mid" ? 90 : 40} />
 
-      <Effects tier={tier} />
+      <Effects tier={tier} focus={focus} />
     </>
   );
 }
