@@ -91,6 +91,23 @@ The site is deliberately 3D-heavy. Keep these invariants:
 - **No external 3D assets.** Lighting is `Lightformer` rigs; the lattice
   sprite is drawn to a canvas at runtime. Do not add CDN-hosted HDRIs.
 - `prefers-reduced-motion` must render final states, never skip content.
+  Read it with `usePrefersReducedMotion` (hydration-safe), not Motion's
+  `useReducedMotion`, wherever it changes what is first rendered.
+
+## The cleaning method sequence
+
+`/cleaning#method` is a pinned, scroll-scrubbed scene
+(`components/sections/CleanSequence.tsx` + `components/three/OfficeClean.tsx`),
+timed by `lib/clean-sequence.ts`. Every pass uses one motif: a clean edge
+crosses the surface (a shader patch, `withReveal`), and everything behind it
+is finished. The camera follows a single spline through evenly spaced keys,
+and the copy is scrubbed by scroll rather than triggered at thresholds.
+
+- Scroll-linked `useTransform` stops must include 0 and 1. Motion
+  hardware-accelerates them, and outside the given stops the element falls
+  back to its base style, so a faded block reappears.
+- Keep the floor's environment reflection low. The environment is at
+  infinity, so a strong window reflection lands near the camera as a patch.
 
 ## Hosting: GitHub Pages, static export
 
