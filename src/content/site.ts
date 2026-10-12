@@ -351,14 +351,15 @@ export const cleaning = {
 /* -------------------------------------------------------------------------- */
 
 /**
- * TODO: every value in this block is a placeholder. Replace before launch —
- * these are not real, working contact details.
+ * Email is real (confirmed by the owner). TODO: phone and ABN are still
+ * placeholders — not real, working details. Replace before launch.
  */
 export const contact = {
   phoneDisplay: "1300 000 000",
   phoneHref: "tel:1300000000",
-  email: "hello@donandsilvagroup.com.au",
-  emailCleaning: "cleaning@donandsilvagroup.com.au",
+  email: "admin@donsilvagroup.com",
+  // One inbox for now; split per division once each has its own.
+  emailCleaning: "admin@donsilvagroup.com",
   abn: "00 000 000 000",
   region: "Melbourne & Victoria, Australia",
   hours: "Mon–Sat, 7:00am – 6:00pm (Melbourne time)",
